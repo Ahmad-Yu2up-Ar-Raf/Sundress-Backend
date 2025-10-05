@@ -18,7 +18,7 @@ class AuthenticatedSessionController extends Controller
     {
         $request->authenticate();
 
-        $request->session()->regenerate();
+        // $request->session()->regenerate();
    
 
 
@@ -28,7 +28,7 @@ class AuthenticatedSessionController extends Controller
         $user = $request->user();
         
         // Hapus token lama (optional)
-        $user->tokens()->delete();
+        // $user->tokens()->delete();
         
         // Create new token
         $token = $user->createToken('api-token')->plainTextToken;
