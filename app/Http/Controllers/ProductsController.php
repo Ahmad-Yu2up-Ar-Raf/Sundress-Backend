@@ -6,70 +6,95 @@ use App\Models\Products;
 use App\Models\Whishlist;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class ProductsController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-     public function index(Request $request)
-    {
-        $perPage = $request->input('perPage', 10);
-        $search = $request->input('search');
-           $page = $request->input('page', 1);
+
+
+public function index(Request $request)
+{
+    $perPage = $request->input('perPage', 10);
+    $search = $request->input('search');
+    $page = $request->input('page', 1);
+    $status = $request->input('status');
+
+    $query = Products::where('status', 'available')
+        ->where('stock', '>', 0);
+
+
+    $user = null;
     $token = $request->bearerToken();
-        $status = $request->input('status');
-        $query = Products::where('status' , 'available')->where('stock' ,'>', 0);
 
-     if ($search) {
-            $query->where(function($q) use ($search) {
-                $searchLower = strtolower($search);
-                $q->whereRaw('LOWER(name) LIKE ?', ["%{$searchLower}%"])
-                  ->orWhereRaw('LOWER(description) LIKE ?', ["%{$searchLower}%"]);
-            });
+    if ($token) {
+        $accessToken = PersonalAccessToken::findToken($token);
+        if ($accessToken) {
+            $user = $accessToken->tokenable; 
         }
-
-     
-        if ($status) {
-            if (is_array($status)) {
-                $query->whereIn('status', $status);
-            } else if (is_string($status)) {
-                $statusArray = explode(',', $status);
-                $query->whereIn('status', $statusArray);
-            }
-        }
-
-
-       $products = $query->orderBy('created_at', 'desc')->paginate($perPage, ['*'], 'page', $page);
-    $products->through(function($item) use ($token)  {
-            return [
- 
-         ...$item->toArray(),
-           'user_idssd' => Auth::id(), 
-                'thumnail_image' => $item->thumnail_image ? url($item->thumnail_image) : null,
-                'main_image' => $item->main_image ? url($item->main_image) : null
-            ];
-        });
-
-       return response()->json([
-    'status' => true,
-    'message' => 'Products retrieved successfully',
-    'data' => $products->items() ?? [],
-    'meta' => [
-        'filters' => [
-            'search' => $search ?? '',
-            'status' => $status ?? [],
-        ],
-        'pagination' => [
-            'total' => $products->total(),
-            'currentPage' => $products->currentPage(),
-            'perPage' => $products->perPage(),
-            'lastPage' => $products->lastPage(),
-        ]
-    ]
-], 200);
-
     }
+
+
+    if ($search) {
+        $query->where(function($q) use ($search) {
+            $searchLower = strtolower($search);
+            $q->whereRaw('LOWER(name) LIKE ?', ["%{$searchLower}%"])
+              ->orWhereRaw('LOWER(description) LIKE ?', ["%{$searchLower}%"]);
+        });
+    }
+
+ 
+    if ($status) {
+        if (is_array($status)) {
+            $query->whereIn('status', $status);
+        } elseif (is_string($status)) {
+            $statusArray = explode(',', $status);
+            $query->whereIn('status', $statusArray);
+        }
+    }
+
+
+    $products = $query->orderBy('created_at', 'desc')
+        ->paginate($perPage, ['*'], 'page', $page);
+
+
+    $products->through(function ($item) use ($user) {
+        $isWishlisted = false;
+
+        if ($user) {
+            $isWishlisted = Whishlist::where('user_id', $user->id)
+                ->where('product_id', $item->id)
+                ->exists();
+        }
+
+        return [
+            ...$item->toArray(),
+            'thumbnail_image' => $item->thumbnail_image ? url($item->thumbnail_image) : null,
+            'main_image' => $item->main_image ? url($item->main_image) : null,
+            'is_whislisted' => $isWishlisted,
+        ];
+    });
+
+    return response()->json([
+        'status' => true,
+        'message' => 'Products retrieved successfully',
+        'data' => $products->items() ?? [],
+        'meta' => [
+            'filters' => [
+                'search' => $search ?? '',
+                'status' => $status ?? [],
+            ],
+            'pagination' => [
+                'total' => $products->total(),
+                'currentPage' => $products->currentPage(),
+                'perPage' => $products->perPage(),
+                'lastPage' => $products->lastPage(),
+            ],
+        ],
+    ], 200);
+}
 
 
     /**

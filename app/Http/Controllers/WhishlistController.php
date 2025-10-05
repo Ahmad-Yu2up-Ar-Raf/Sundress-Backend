@@ -6,6 +6,7 @@ use App\Http\Requests\WhishlistStore;
 use App\Models\Whishlist;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class WhishlistController extends Controller
 {
@@ -40,6 +41,39 @@ class WhishlistController extends Controller
 
                return response()->json(['message' => 'Whistlist added successfully'], 201); // 201 Created status
     }
+
+
+    public function unwhislited(Request $request)
+    {  
+              
+
+    $user = null;
+    $token = $request->bearerToken();
+    $product_id = $request->get('product_id');
+
+    if ($token) {
+        $accessToken = PersonalAccessToken::findToken($token);
+        if ($accessToken) {
+            $user = $accessToken->tokenable; 
+        }
+    } else{
+        return response()->json(['message' => 'Not authenthicated'], 201); // 201 Created status
+    }
+    
+    if($user){
+        $whishlist = Whishlist::where('user_id' , $user->id)->where('product_id', $product_id);
+              
+   
+              $whishlist->delete();
+        
+    }
+
+
+
+      
+
+               return response()->json(['message' => 'Whistlist added successfully'], 201); // 201 Created status
+    }
     public function removeFromWhistlist(WhishlistStore $request)
     {  
               
@@ -52,6 +86,12 @@ class WhishlistController extends Controller
 
                return response()->json(['message' => 'Whistlist added successfully'], 201); // 201 Created status
     }
+   
+
+
+
+
+
 
     /**
      * Display the specified resource.
