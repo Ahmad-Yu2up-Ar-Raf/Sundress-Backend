@@ -12,4 +12,6 @@ enum CategoryProductsStatus: string
     case Beauty = 'beauty';
     case Sports = 'sports';
     case Toys = 'toys';
+    case Health = 'health';
+    case Accessories = 'accessories';
 }
