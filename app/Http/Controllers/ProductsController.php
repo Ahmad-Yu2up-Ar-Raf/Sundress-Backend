@@ -21,6 +21,7 @@ public function index(Request $request)
     $search = $request->input('search');
     $page = $request->input('page', 1);
     $status = $request->input('status');
+    $category = $request->input('category');
 
     $query = Products::where('status', 'available')
         ->where('stock', '>', 0);
@@ -52,6 +53,14 @@ public function index(Request $request)
         } elseif (is_string($status)) {
             $statusArray = explode(',', $status);
             $query->whereIn('status', $statusArray);
+        }
+    }
+    if ($category) {
+        if (is_array($category)) {
+            $query->whereIn('category', $category);
+        } elseif (is_string($category)) {
+            $categoryArray = explode(',', $category);
+            $query->whereIn('category', $categoryArray);
         }
     }
 
@@ -91,6 +100,7 @@ public function index(Request $request)
                 'currentPage' => $products->currentPage(),
                 'perPage' => $products->perPage(),
                 'lastPage' => $products->lastPage(),
+                     'hasMore' => $products->currentPage() < $products->lastPage(),
             ],
         ],
     ], 200);
