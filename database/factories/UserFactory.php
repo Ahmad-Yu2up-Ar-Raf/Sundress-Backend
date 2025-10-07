@@ -32,11 +32,7 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
          'password' => static::$password ??= Hash::make('Pa$$w0rd!'),
             'remember_token' => Str::random(10),
-         
-            // Contoh path avatar (disimpan di storage/app/public/avatar/)
             'avatar' => ImageHelper::random(64, 64),
-
-            // Ambil random value dari enum RoleEnums
             'role' => $this->faker->randomElement(RoleEnums::class)
         ];
     }
@@ -51,9 +47,15 @@ class UserFactory extends Factory
             ];
         });
     }
-    /**
-     * Indicate that the model's email address should be unverified.
-     */
+      public function buyer()
+    {
+        return $this->state(function (array $attributes) {
+            return [
+                'role' => 'buyer',
+            ];
+        });
+    }
+ 
     public function unverified(): static
     {
         return $this->state(fn (array $attributes) => [

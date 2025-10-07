@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Courier;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use Illuminate\Database\Migrations\Migration;
@@ -21,11 +22,12 @@ return new class extends Migration
     $table->unsignedInteger('quantity')->default(1);
     $table->unsignedBigInteger('total_price')->default(0);
     $table->string('status')->default(OrderStatus::Pending->value);
+    $table->string('courier')->default(Courier::LOCAL_COURIER->value);
     $table->text('address')->nullable();
     $table->text('notes')->nullable();
     $table->string('payment_proof')->nullable();
-$table->string('payment_method')->default(PaymentMethod::CashOnDelivery->value);
-$table->timestamp('paid_at')->nullable();
+    $table->string('payment_method')->default(PaymentMethod::CashOnDelivery->value);
+    $table->timestamp('paid_at')->nullable();
 });
 
 

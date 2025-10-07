@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Products;
 use App\Models\Whishlist;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Laravel\Sanctum\PersonalAccessToken;
 
 class ProductsController extends Controller
@@ -22,9 +21,10 @@ public function index(Request $request)
     $page = $request->input('page', 1);
     $status = $request->input('status');
     $category = $request->input('category');
+    $free_shipping = $request->input('free_shipping');
 
     $query = Products::where('status', 'available')
-        ->where('stock', '>', 0);
+        ->where('stock', '>', 0)->withCount("reviews")->withCount("orders")->withAvg("reviews", "star_rating");
 
 
     $user = null;
@@ -54,6 +54,11 @@ public function index(Request $request)
             $statusArray = explode(',', $status);
             $query->whereIn('status', $statusArray);
         }
+    }
+    if ($free_shipping) {
+    
+            $query->where('free_shipping', $free_shipping);
+      
     }
     if ($category) {
         if (is_array($category)) {

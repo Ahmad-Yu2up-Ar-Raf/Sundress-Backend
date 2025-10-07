@@ -17,6 +17,7 @@ class Products extends Model
     protected $fillable = [
         'user_id',
         'name',
+        'free_shipping',
         'description',
         'status',
         'stock',
@@ -34,6 +35,7 @@ class Products extends Model
         'name' => 'string',
         'thumbnail_image' => 'string',
         'main_image' => 'string',
+        'free_shipping' => 'boolean',
         'city' => 'string',
         'country' => 'string',
         'currency' => 'string',
@@ -52,26 +54,34 @@ class Products extends Model
     {
         return $this->belongsTo(User::class);
     }
-    
-    public function order(): HasMany
+     
+    public function orders(): HasMany
     {
        return $this->hasMany(Orders::class, 'product_id');
     }
-
+    
+    public function reviews(): HasMany
+    {
+       return $this->hasMany(Reviews::class, 'product_id');
+    }
 
     public function whistlist(): HasMany
     {
        return $this->hasMany(Whishlist::class, 'product_id');
     }
 
- public function getPriceFormattedAttribute()
-{
-
-    if ($this->currency === 'IDR') {
-        return number_format($this->price, 0, ',', '.');
+    public function getPriceFormattedAttribute()
+    {
+        if ($this->currency === 'IDR') {
+            return number_format($this->price, 0, ',', '.');
+        }
     }
-    
-}
 
-   
+    public function updateRatingStats()
+    {
+        $this->update([
+            'average_rating' => round($this->reviews()->avg('star_rating'), 1),
+            'reviews_count' => $this->reviews()->count(),
+        ]);
+    }
 }

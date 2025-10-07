@@ -18,11 +18,12 @@ return new class extends Migration
     $table->timestamps();
     $table->foreignId('user_id')->constrained()->onDelete('cascade');
     $table->string('name')->unique();
-    $table->text('description')->nullable();
+    $table->longText('description')->nullable();
     $table->string('country')->default('ID');
     $table->string('city')->nullable();
     $table->string('status')->default(ProductStatus::Available->value);
     $table->string('category')->default(CategoryProductsStatus::Food->value);
+    $table->boolean('free_shipping')->default(false);
     $table->unsignedBigInteger('price')->default(0);
     $table->char('currency', 3)->default('IDR');
     $table->integer('stock')->default(1);
